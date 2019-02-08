@@ -1,29 +1,43 @@
-const User = require('../models/user');
+(function () {
+    const jwt = require('jwt-simple')
+    const User = require('../models/user');
+    const config = require('../config');
 
-exports.signup = function (req: any, res: any, next: any) {
-    const email = req.body.email;
-    const password = req.body.password;
-
-    if (!email || !password) {
-        return res.status(422).send({ error: 'You must provide email and password' });
+    function tockenForUser(user: any) {
+        const timeStamp = new Date().getTime();
+        return jwt.encode({ sub: user.id, iat: timeStamp }, config.secret);
     }
 
-    User.findOne({ email: email }, function (err: Error, existingUser: any) {
-        if (err) { return next(err); }
+    exports.signin = function (req: any, res: any, next: any) {
+        console.log(req);
+        res.send({ token: tockenForUser(req.user) })
+    }
 
-        if (existingUser) {
-            return res.status(422).send({ error: 'Email is in use' });
+    exports.signup = function (req: any, res: any, next: any) {
+        const email = req.body.email;
+        const password = req.body.password;
+
+        if (!email || !password) {
+            return res.status(422).send({ error: 'You must provide email and password' });
         }
 
-        const user = new User({
-            email: email,
-            password: password
-        })
-
-        user.save(function (err: Error) {
+        User.findOne({ email: email }, function (err: Error, existingUser: any) {
             if (err) { return next(err); }
 
-            res.json(user);
+            if (existingUser) {
+                return res.status(422).send({ error: 'Email is in use' });
+            }
+
+            const user = new User({
+                email: email,
+                password: password
+            })
+
+            user.save(function (err: Error) {
+                if (err) { return next(err); }
+
+                res.json({ token: tockenForUser(user) });
+            })
         })
-    })
-}
+    }
+})();

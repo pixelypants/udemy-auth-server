@@ -24,6 +24,14 @@
         })
     })
 
-    const ModelClass = mongoose.model('user', userSchema);
+    userSchema.methods.comparePasswords = function (candidatePassword: String, callback: any) {
+        bcrypt.compare(candidatePassword, this.password, function (err: Error, isMatch: Boolean) {
+            if (err) { return callback(err); }
+
+            callback(null, isMatch);
+        })
+    }
+
+    const ModelClass = mongoose.model('User', userSchema);
     module.exports = ModelClass;
 })();
