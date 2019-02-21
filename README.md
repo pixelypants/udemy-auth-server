@@ -1,0 +1,2 @@
+$ mongod
+$ npm run start
